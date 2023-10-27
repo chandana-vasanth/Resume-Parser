@@ -2,9 +2,31 @@
 <html>
 <head>
     <title>Resume Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Roboto+Slab&display=swap" rel="stylesheet">
+    <style>
+        body
+        {
+            margin: 0;
+        }
+        .head
+        {
+            background-color: #478af2;
+            padding: 5px;
+        }
+        .heading
+        {
+            padding-left: 60px;
+            color:white;
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload a Resume/CV</h1>
+    <div class="head">
+        <h1 class="heading">parserésumé</h1>
+    </div>
     <form action="/upload" method="POST" enctype="multipart/form-data">
         <input type="file" name="file" accept=".pdf, .docx, .txt">
         <input type="submit" value="Upload">

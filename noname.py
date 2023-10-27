@@ -3,14 +3,9 @@ from PyPDF2 import PdfReader
 from flask import Flask, request, render_template, send_file
 from werkzeug.utils import secure_filename
 import re
-import nltk
-from nltk.tokenize import word_tokenize, sent_tokenize
-from nltk.corpus import names
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-
-nltk.download('names')  # Download the names dataset for NLTK
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'txt', 'pdf', 'docx'}
@@ -34,17 +29,15 @@ def convert_to_plain_text(file_path):
     else:
         return "Unsupported file format"
 
-def is_name(word):
-    # Check if the word is a common name using NLTK's names.words() dataset
-    return word in names.words() or word.lower() in names.words()
-
 def extract_information(text):
+    # Regular expressions for pattern matching
     email_pattern = r'\S+@\S+'
     phone_pattern = r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]'
     qualification_pattern = r'(Bachelor|Master|Ph\.?D\.?)\'?s? (of)? (\w+)'
     college_pattern = r'(.+) University|College|Institute'
     specialization_pattern = r'in (\w+)'
 
+    # Initialize variables to store extracted information
     name = ""
     email = ""
     mobile_number = ""
@@ -53,25 +46,21 @@ def extract_information(text):
     specialization = ""
     year_of_graduation = ""
 
-    sentences = sent_tokenize(text)
-    for sentence in sentences:
-        words = word_tokenize(sentence)
-        for word in words:
-            if is_name(word):
-                name = word
-                break
+    # Extract Name
+    # In a real-world application, you might use more sophisticated techniques for name extraction.
+    name = re.findall(r'^[A-Z][a-z]+ [A-Z][a-z]+', text)
 
+    # Extract Email
     email_match = re.search(email_pattern, text)
     if email_match:
         email = email_match.group()
-    parts = email.split("@")
-    name = ''.join(filter(str.isalpha, parts[0]))
-    name=name.capitalize()
 
+    # Extract Mobile Number
     phone_match = re.search(phone_pattern, text)
     if phone_match:
         mobile_number = phone_match.group()
 
+    # Extract Qualification, College, Specialization, and Year of Graduation
     qualification_match = re.search(qualification_pattern, text)
     college_match = re.search(college_pattern, text)
     specialization_match = re.search(specialization_pattern, text)
@@ -84,12 +73,13 @@ def extract_information(text):
     
     if specialization_match:
         specialization = specialization_match.group(1)
-
+    
+    # Year of Graduation (Assuming it's a 4-digit year)
     year_matches = re.findall(r'(\d{4})', text)
     if year_matches:
-        year_of_graduation = year_matches[-1]
-    
-    print(name)
+        year_of_graduation = year_matches[-1]  # Take the last 4-digit number as the year
+
+    # Gender information is not easily extractable from plain text and might not be present in the resume.
 
     return {
         'Name': name,
@@ -120,7 +110,10 @@ def upload_resume():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
         
+        # Convert the file to plain text
         text = convert_to_plain_text(file_path)
+        
+        # Extract information from the text
         extracted_info = extract_information(text)
         
         return render_template('result.html', info=extracted_info)
